@@ -14,7 +14,7 @@ class CTCLayer(layers.Layer):
         self.loss_fn = keras.backend.ctc_batch_cost
 
     def call(self, y_true, y_pred):
-        batch_len = tf.cast(tf.shape(y_true)[0], dtype=tf.int64)
+        batch_len = tf.cast(tf.shape(y_true)[1], dtype=tf.int64)
         input_length = tf.cast(tf.shape(y_pred)[1], dtype=tf.int64)
         label_length = tf.cast(tf.shape(y_true)[1], dtype=tf.int64)
         input_length = input_length * tf.ones((batch_len, 1), dtype=tf.int64)
@@ -36,7 +36,7 @@ class ApplyModel:
         self.img_height = img_height
         self.max_length = max_length
         self.characters = characters
-        
+       
         # 최신 tf.keras.layers.StringLookup 사용
         self.char_to_num = tf.keras.layers.StringLookup(
             vocabulary=sorted(self.characters), num_oov_indices=0, mask_token=None
@@ -139,7 +139,7 @@ def test_model(weights_path, test_folder, train_folder):
             print(f"파일: {fname} | 정답: {truth} | 예측: {pred}")
 
 if __name__ == "__main__":
-    weights_path = r"C:\Users\hyungwoo\Desktop\hwcode\ocr_model_weights.weights.h5"
-    test_folder = r"C:\Users\hyungwoo\Desktop\hwcode\captcha_dataset2"
-    train_folder = r"C:\Users\hyungwoo\Desktop\hwcode\captcha_dataset2"
+    weights_path = r"ocr_model_weights.weights.h5"
+    test_folder = r"captcha_dataset2"
+    train_folder = r"captcha_dataset2"
     test_model(weights_path, test_folder, train_folder)
