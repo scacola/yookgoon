@@ -6,7 +6,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 
 # 저장할 데이터셋 폴더 지정 (없으면 생성)
-dataset_dir = "captcha_dataset"
+dataset_dir = "captcha_dataset2"
 os.makedirs(dataset_dir, exist_ok=True)
 
 # 크롬 옵션 설정 (디버깅 모드가 아니라 headless 모드로 진행할 수도 있음)
@@ -17,7 +17,7 @@ driver = webdriver.Chrome(options=chrome_options)
 # 캡차 페이지 URL (매번 새로고침하면 다른 이미지가 표시됨)
 url = "https://mwpt.mma.go.kr/caisBMHS/simpleCaptcha/0.06932339158397749.do"
 
-num_images = 1000  # 수집할 이미지 수 (원하는 개수로 조정)
+num_images = 200  # 수집할 이미지 수 (원하는 개수로 조정)
 for i in range(num_images):
     driver.get(url)
     time.sleep(0.5)  # 페이지가 완전히 로드될 시간 대기 (필요시 조정)
