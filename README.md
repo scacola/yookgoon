@@ -1,0 +1,1 @@
+To automatically read captcha
