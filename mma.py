@@ -105,19 +105,19 @@ def capture_captcha_and_recognize(driver):
             if not img_src.startswith('http'):
                 img_src = urljoin(driver.current_url, img_src)
             
-            # 일반 URL인 경우 스크린샷으로 캡처
-            captcha_img.screenshot(temp_path)
+            # 원본 이미지를 Canvas를 통해 추출
+            image_data = driver.execute_script("""
+                var img = arguments[0];
+                var canvas = document.createElement('canvas');
+                canvas.width = img.naturalWidth;
+                canvas.height = img.naturalHeight;
+                canvas.getContext('2d').drawImage(img, 0, 0);
+                return canvas.toDataURL('image/png').split(',')[1];
+            """, captcha_img)
+            with open(temp_path, "wb") as f:
+                f.write(base64.b64decode(image_data))
         
-        # # 캡차 이미지 전처리: OCR 입력 크기에 맞게 조정
-        # img = Image.open(temp_path).convert("L")  # 흑백 변환
-        # img = img.resize((200, 50))  # OCR 모델 입력 크기와 동일하게 조정
-        # img.save(temp_path)  # 전처리된 이미지를 다시 저장
-        
-        # # 3-1. Tesseract OCR을 사용하여 텍스트 인식
-        # result = pytesseract.image_to_string(img, config='--psm 7')  # PSM 7: 단일 텍스트 라인 모드
-
         pred = AM.predict(temp_path)
-        
         return pred  # 결과 문자열 반환 (양쪽 공백 제거)
     
     except Exception as e:
@@ -270,5 +270,5 @@ if __name__ == "__main__":
     button = WebDriverWait(driver, 10).until(
         EC.element_to_be_clickable((By.XPATH, '//*[@id="contents"]/div/form[1]/p[2]/span[1]/a'))
     )
-    button.click()
-    print("버튼 클릭 성공!")
+    # button.click()
+    # print("버튼 클릭 성공!")
