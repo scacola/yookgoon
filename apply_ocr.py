@@ -27,8 +27,8 @@ class CTCLayer(layers.Layer):
 ##############################
 class ApplyModel:
     def __init__(self, weights_path,
-                 img_width=200, 
-                 img_height=50, 
+                 img_width=80, 
+                 img_height=28, 
                  max_length=6,
                  characters={'0','1','2','3','4','5','6','7','8','9'}):
         self.img_width = img_width
@@ -43,8 +43,13 @@ class ApplyModel:
         self.num_to_char = tf.keras.layers.StringLookup(
             vocabulary=self.char_to_num.get_vocabulary(), mask_token=None, invert=True
         )
-        self.model = self.build_model()
-        self.model.load_weights(weights_path)
+        try:
+            self.model = self.build_model()
+            self.model.load_weights(weights_path)
+            print("가중치 로드 성공!")
+        except Exception as e:
+            print(f"가중치 로드 실패: {e}")
+            print("모델 구조와 가중치 파일이 일치하는지 확인하세요.")
         # 예측을 위한 모델: 전체 모델에서 첫 번째 입력(이미지)과 dense2 층 출력만 사용
         self.prediction_model = keras.models.Model(
             self.model.input[0], self.model.get_layer(name="dense2").output
@@ -93,15 +98,17 @@ class ApplyModel:
 
     def predict(self, target_img_path):
         sample = self.encode_single_sample(target_img_path)
+        print("이미지 로드 성공!")
         img = tf.reshape(sample["image"], shape=[1, self.img_width, self.img_height, 1])
         pred_val = self.prediction_model.predict(img)
         pred = self.decode_batch_predictions(pred_val)[0]
         return pred
 
 if __name__ == "__main__":
-    weights_path = r"C:\Users\hyungwoo\Desktop\hwcode\ocr_model_weights.weights.h5"
+    # weights_path = r"C:\Users\hyungwoo\Desktop\hwcode\ocr_model_weights.weights.h5"
+    weights_path = r".\ocr_model_weights.weights.h5"
     model_app = ApplyModel(weights_path)
     # 예측할 이미지 파일 경로를 올바르게 지정하세요.
-    test_img = r"C:\Users\hyungwoo\Desktop\hwcode\captcha_dataset\00978.png"
+    test_img = r".\temp_captcha.png"
     prediction = model_app.predict(test_img)
     print("예측 결과:", prediction)
