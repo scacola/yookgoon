@@ -16,21 +16,6 @@ import CaptchaCracker as cc
 
 # pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
-co = Options()
-co.add_experimental_option('debuggerAddress', '127.0.0.1:9222')
-driver = webdriver.Chrome(options=co)
-
-main_window = driver.current_window_handle
-
-
-
-img_width = 80
-img_height = 28
-img_length = 5
-img_char = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'}
-weights_path = r".\weights.h5"
-
-AM = cc.ApplyModel(weights_path, img_width, img_height, img_length, img_char)  # ✅ 모델을 한 번만 생성
 # iframe 내부로 이동
 def switch_to_iframe(iframe_id):
     print("현재 창:", driver.current_window_handle)
@@ -51,30 +36,6 @@ def click_by_text_wait(text):
     except Exception as e:
         print(f"오류 발생: {e}")
 
-# iframe 전환
-switch_to_iframe("main")
-
-print("현재 열린 모든 창:", driver.window_handles)
-
-# "입영 가능 일자 조회" 자동 클릭 부분 제거 (다음 줄 주석 처리)
-# click_by_text_wait("입영 가능 일자 조회")
-
-# 수동 클릭을 위한 안내 메시지
-initial_handles = driver.window_handles
-print("'입영 가능 일자 조회' 버튼을 수동으로 클릭해주세요.")
-print(f"현재 창 수: {len(initial_handles)}")
-num_handles = len(initial_handles)
-
-# 사용자가 수동으로 버튼을 클릭하여 새 창이 열릴 때까지 대기
-try:
-    WebDriverWait(driver, 30).until(lambda d: len(d.window_handles) > len(initial_handles))
-    print("새 창이 감지되었습니다.")
-    # 새 창 (목록의 마지막 창)으로 전환
-    new_window = driver.window_handles[-1]
-    driver.switch_to.window(new_window)
-    print("새 창으로 전환 성공!")
-except Exception as e:
-    print(f"새 창 감지 실패: {e}")
 
 
 
@@ -92,39 +53,35 @@ def switch_to_new_window():
 
 def click_date(target_date):
     try:
-        formatted_date = f"{target_date[:4]}-{target_date[4:6]}-{target_date[6:]}"
-        xpath = f"//a[contains(text(), '{formatted_date}')]"
-
-        element = WebDriverWait(driver, 1).until(
-            EC.element_to_be_clickable((By.XPATH, xpath))
-        )
-        element.click()
-        print(f"{formatted_date} 클릭 성공!")
+        xpath = f"//a[contains(text(), '{target_date}')]"
+        # element = WebDriverWait(driver, 5).until(
+        #     EC.element_to_be_clickable((By.XPATH, xpath))
+        # )
+        element = driver.find_element(By.XPATH, xpath)
+        print(element)
+        if not element.is_displayed():
+            print(f"{target_date} 날짜가 보이지 않습니다.")
+            return False
+        else:
+            element.click()
+            print(f"{target_date} 클릭 성공!")
+            return True
     except Exception as e:
         print(f"클릭 실패: {e}")
 
-# 실제
-priority_dates = ["2025-05-26", "2025-05-27", "2025-05-19", "2025-05-20", "2025-06-09", "2025-06-02", "2025-04-21", "2025-04-28", "2025-06-23", "2025-07-07"]
-
-# # 테스트
-# priority_dates = [
-#     "2025-12-08", "2025-11-24",
-#     "2025-11-17", "2025-11-10", "2025-12-01", "2025-12-15", "2025-12-22"
-# ]
 
 def click_priority_dates(dates):
     for date in dates:
         try:
-            formatted_date = date.replace("-", "")  # "YYYY-MM-DD" -> "YYYYMMDD" 형식으로 변환
-            click_date(formatted_date)
-            print(f"{date} 클릭 완료")
-            break  # 클릭 성공 시 루프 종료
+            is_clicked = click_date(date)
+            if is_clicked:
+                print(f"{date} 클릭 완료")
+                break  # 클릭 성공 시 루프 종료
+            else:
+                print(f"{date} 클릭 실패")
+                # 클릭 실패 시 다음 날짜로 넘어감
         except Exception as e:
             print(f"{date} 클릭 실패: {e}")
-
-# 우선순위 날짜 클릭 실행
-click_priority_dates(priority_dates)
-
 # 이미 열려있는 드라이버 사용
 def capture_captcha_and_recognize(driver):
     # 1. 캡차 이미지 요소 찾기
@@ -184,10 +141,6 @@ def recognize_current_captcha(driver):
     else:
         print("캡차 인식 실패")
 
-# 현재 열려있는 드라이버에서 캡차 인식 실행
-recognize_current_captcha(driver)
-
-
 # # 캡차 입력창 포커스 상태
 # def move_to_captcha_input():
 #     try:
@@ -204,8 +157,6 @@ recognize_current_captcha(driver)
 #     except Exception as e:
 #         print(f"캡차 입력창으로 이동 실패: {e}")
 
-# # 캡차 입력창으로 이동
-# move_to_captcha_input()
 
 # # 웹드라이버에서 엔터 키 감지
 # def wait_for_enter():
@@ -228,9 +179,6 @@ recognize_current_captcha(driver)
 #         print(f"키 감지 중 오류 발생: {e}")
 #         input("콘솔에서 엔터를 누르면 종료됩니다.")
 
-# # 엔터 입력 대기
-# wait_for_enter()
-
 # "입영일자선택확인" 버튼 클릭
 def click_confirm_button():
     try:
@@ -242,32 +190,85 @@ def click_confirm_button():
     except Exception as e:
         print(f"확인 버튼 클릭 실패: {e}")
 
-# 확인 버튼 클릭
-click_confirm_button()
 
-# # 팝업창이 닫힐 때까지 대기 (명시적 대기 사용)
-# try:
-#     print("팝업창이 닫힐 때까지 대기 중...")
-#     print("현재 창 수:", len(driver.window_handles))
-#     WebDriverWait(driver, 10).until(EC.number_of_windows_to_be(num_handles))
-#     print("팝업창이 닫혔습니다.")
-#     print("현재 창 수:", len(driver.window_handles))
-# except:
-#     print("팝업창이 닫히지 않았거나 예상보다 오래 걸립니다.")
 
-# 메인 창으로 초점 전환
-driver.switch_to.window(main_window)
-print("메인 창으로 전환 성공!")
+if __name__ == "__main__":
 
-# iframe 찾기 및 전환
-iframe = WebDriverWait(driver, 10).until(
-    EC.presence_of_element_located((By.ID, "main"))
-)
-driver.switch_to.frame(iframe)
+    co = Options()
+    co.add_experimental_option('debuggerAddress', '127.0.0.1:9222')
+    driver = webdriver.Chrome(options=co)
 
-# iframe 내부에서 버튼 찾기 및 클릭
-button = WebDriverWait(driver, 10).until(
-    EC.element_to_be_clickable((By.XPATH, '//*[@id="contents"]/div/form[1]/p[2]/span[1]/a'))
-)
-button.click()
-print("버튼 클릭 성공!")
+    main_window = driver.current_window_handle
+
+    img_width = 80
+    img_height = 28
+    img_length = 5
+    img_char = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'}
+    weights_path = r".\weights.h5"
+
+    AM = cc.ApplyModel(weights_path, img_width, img_height, img_length, img_char)  # ✅ 모델을 한 번만 생성
+
+    # iframe 전환
+    switch_to_iframe("main")
+
+    print("현재 열린 모든 창:", driver.window_handles)
+
+    # "입영 가능 일자 조회" 자동 클릭 부분 제거 (다음 줄 주석 처리)
+    # click_by_text_wait("입영 가능 일자 조회")
+
+    # 수동 클릭을 위한 안내 메시지
+    initial_handles = driver.window_handles
+    print("'입영 가능 일자 조회' 버튼을 수동으로 클릭해주세요.")
+    print(f"현재 창 수: {len(initial_handles)}")
+    num_handles = len(initial_handles)
+    # 사용자가 수동으로 버튼을 클릭하여 새 창이 열릴 때까지 대기
+    try:
+        WebDriverWait(driver, 30).until(lambda d: len(d.window_handles) > len(initial_handles))
+        print("새 창이 감지되었습니다.")
+        # 새 창 (목록의 마지막 창)으로 전환
+        new_window = driver.window_handles[-1]
+        driver.switch_to.window(new_window)
+        print("새 창으로 전환 성공!")
+    except Exception as e:
+        print(f"새 창 감지 실패: {e}")
+
+    # 실제
+    priority_dates = ["2025-05-26", "2025-05-27", "2025-05-19", "2025-05-20", "2025-06-09", "2025-06-02", "2025-04-21", "2025-04-28", "2025-06-23", "2025-07-07", "2025-12-08", "2025-12-15"]
+    # # 테스트
+    # priority_dates = [
+    #     "2025-12-08", "2025-11-24",
+    #     "2025-11-17", "2025-11-10", "2025-12-01", "2025-12-15", "2025-12-22"
+    # ]
+
+
+    # 우선순위 날짜 클릭 실행
+    click_priority_dates(priority_dates)
+
+    # 현재 열려있는 드라이버에서 캡차 인식 실행
+    recognize_current_captcha(driver)
+
+    # # 캡차 입력창으로 이동
+    # move_to_captcha_input()
+
+    # # 엔터 입력 대기
+    # wait_for_enter()
+
+    # 확인 버튼 클릭
+    click_confirm_button()
+
+    # 메인 창으로 초점 전환
+    driver.switch_to.window(main_window)
+    print("메인 창으로 전환 성공!")
+
+    # iframe 찾기 및 전환
+    iframe = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.ID, "main"))
+    )
+    driver.switch_to.frame(iframe)
+
+    # iframe 내부에서 버튼 찾기 및 클릭
+    button = WebDriverWait(driver, 10).until(
+        EC.element_to_be_clickable((By.XPATH, '//*[@id="contents"]/div/form[1]/p[2]/span[1]/a'))
+    )
+    button.click()
+    print("버튼 클릭 성공!")

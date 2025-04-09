@@ -11,8 +11,8 @@
 ## 매크로 실행
 
 ```bash
-python3 -m venv .venv
-pip install -r requirements.tx
+python -m venv .venv
+pip install -r requirements.txt
 
-python3 mma.py
+python mma.py
 ```
