@@ -280,8 +280,8 @@ if __name__ == "__main__":
 
         if click_date_count >= 100:
             raise Exception("클릭 실패 100번 이상 발생")
-    print("날짜 루프 끝")
-            
+        
+    print("날짜 루프 종료")
             
 
     # 현재 열려있는 드라이버에서 캡차 인식 실행
@@ -291,14 +291,30 @@ if __name__ == "__main__":
         logger.info("인식 루프 시작")
         try:
             recognize_current_captcha(driver)
-            click_recognize_captcha_flag = True  # 인식 성공 시 루프 종료
+            # 확인 버튼 클릭
+            click_confirm_button()
+            
+            try:
+                # alert가 있는지 즉시 확인
+                alert = driver.switch_to.alert
+                alert_message = alert.text
+                logger.info(f"캡차 오답 - {alert_message}")
+                alert.accept()
+                recognize_captcha_count += 1
+                logger.warning(f"{recognize_captcha_count}번째 시도")
+            except:
+                # alert가 없으면 캡차 정답
+                click_recognize_captcha_flag = True
+                logger.info("캡차 인식 성공!")
+                
         except Exception as e:
             recognize_captcha_count += 1
-            logger.error(f"인식 시도 {recognize_captcha_count}번째 실패")
+            logger.error(f"인식 시도 {recognize_captcha_count}번째 실패: {e}")
 
         if recognize_captcha_count >= 100:
             raise Exception("인식 실패 100번 이상 발생")
-    print("인식 루프 끝")
+
+    logger.info("인식 루프 종료")
             
                 
 
@@ -307,9 +323,6 @@ if __name__ == "__main__":
 
     # # 엔터 입력 대기
     # wait_for_enter()
-
-    # 확인 버튼 클릭
-    click_confirm_button()
 
     # 메인 창으로 초점 전환
     driver.switch_to.window(main_window)
