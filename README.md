@@ -8,6 +8,8 @@
 
 실행
 
+`"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222 --user-data-dir="C:/ChromeTEMP"`
+
 ## 매크로 실행
 
 ```bash
